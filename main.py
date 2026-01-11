@@ -29,7 +29,7 @@ RAREZAS = {
 
 # Diccionario de atributos
 ATRIBUTOS = {
-    "Dark": "AttributeIcon_Dark__1_.png",
+    "Dark": "AttributeIcon_Dark.png",
     "Flame": "AttributeIcon_Flame.png",
     "Void": "AttributeIcon_Void.png",
     "Aqua": "AttributeIcon_Aqua.png",
@@ -66,7 +66,7 @@ def generar_carta(avatar_path, nombre, atributo, discos, rareza):
     """Genera la imagen de la carta"""
     
     # Abrir plantilla
-    template = Image.open('assets/templates/azotado.jpg')
+    template = Image.open('assets/templates/star1.jpg')
     
     # Abrir avatar del usuario
     avatar = Image.open(avatar_path).convert("RGBA")
@@ -109,11 +109,14 @@ def generar_carta(avatar_path, nombre, atributo, discos, rareza):
     # Agregar nombre del usuario
     draw = ImageDraw.Draw(template)
     
-    # Intentar cargar una fuente, si no usar default
+    # Cargar fuente personalizada
     try:
-        font = ImageFont.truetype("arial.ttf", 30)
+        font = ImageFont.truetype("assets/fonts/OptimusPrincepsSemiBold.ttf", 30)
     except:
-        font = ImageFont.load_default()
+        try:
+            font = ImageFont.truetype("assets/fonts/OptimusPrinceps.ttf", 30)
+        except:
+            font = ImageFont.load_default()
     
     # Dibujar nombre centrado en X=486, Y=44
     bbox = draw.textbbox((0, 0), nombre, font=font)
