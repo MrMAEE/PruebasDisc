@@ -83,6 +83,46 @@ def generar_carta(avatar_path, nombre, atributo, discos, rareza):
     else:
         template.paste(avatar, (avatar_x, avatar_y))
     
+    # Pegar marco según atributo y rareza
+    marco_filename = f"{atributo.lower()}_{rareza}.png"
+    marco_path = f'assets/frames/{marco_filename}'
+    
+    try:
+        marco = Image.open(marco_path).convert("RGBA")
+        # El marco debe ser del mismo tamaño que el avatar (303x461)
+        marco = marco.resize((303, 461), Image.Resampling.LANCZOS)
+        # Pegar el marco en la misma posición que el avatar
+        template.paste(marco, (avatar_x, avatar_y), marco)
+    except FileNotFoundError:
+        print(f"Advertencia: No se encontró el marco {marco_filename}")
+    except Exception as e:
+        print(f"Error al cargar marco: {e}")
+    
+    # Pegar estrellas de rareza (solo si rareza es 2 o más)
+    if rareza >= 2:
+        # Configuración específica para cada rareza
+        stars_config = {
+            2: {"x": 824, "y": 10, "w": 74, "h": 48},
+            3: {"x": 822, "y": 9, "w": 104, "h": 49},
+            4: {"x": 816, "y": 8, "w": 133, "h": 50},
+            5: {"x": 827, "y": 10, "w": 153, "h": 47}
+        }
+        
+        config = stars_config[rareza]
+        stars_filename = f"stars_{rareza}.png"
+        stars_path = f'assets/stars/{stars_filename}'
+        
+        try:
+            stars = Image.open(stars_path).convert("RGBA")
+            # Redimensionar según configuración específica
+            stars = stars.resize((config["w"], config["h"]), Image.Resampling.LANCZOS)
+            # Pegar en posición específica
+            template.paste(stars, (config["x"], config["y"]), stars)
+        except FileNotFoundError:
+            print(f"Advertencia: No se encontró la imagen de estrellas {stars_filename}")
+        except Exception as e:
+            print(f"Error al cargar estrellas: {e}")
+    
     # Abrir y pegar ícono de atributo
     atributo_icon = Image.open(f'assets/attributes/{ATRIBUTOS[atributo]}').convert("RGBA")
     atributo_icon = atributo_icon.resize((45, 45), Image.Resampling.LANCZOS)
@@ -313,72 +353,6 @@ async def elegir_discos(ctx):
     
     except TimeoutError:
         await ctx.send("⏰ Tiempo agotado. Usa `!elegir_discos` para intentar de nuevo.")
-
-@bot.command(name='reset')
-async def reset_rareza(ctx):
-    """Remueve todos los roles de rareza del usuario"""
-    
-    roles_a_remover = [rol for rol in ctx.author.roles if rol.name in [r["nombre"] for r in RAREZAS.values()]]
-    
-    if not roles_a_remover:
-        await ctx.send("❌ No tienes ningún rol de rareza.")
-        return
-    
-    try:
-        await ctx.author.remove_roles(*roles_a_remover)
-        await ctx.send(f"✅ {ctx.author.mention} Se han removido tus roles de rareza.")
-    except discord.Forbidden:
-        await ctx.send("❌ No tengo permisos para remover roles.")
-    except Exception as e:
-        await ctx.send(f"❌ Error: {e}")
-
-@bot.command(name='rareza')
-async def ver_rareza(ctx):
-    """Muestra la rareza actual del usuario"""
-    
-    roles_rareza = [rol for rol in ctx.author.roles if rol.name in [r["nombre"] for r in RAREZAS.values()]]
-    
-    if not roles_rareza:
-        await ctx.send(f"{ctx.author.mention} No tienes ninguna rareza asignada. Usa `!tirar` para obtener una.")
-    else:
-        rol = roles_rareza[0]
-        await ctx.send(f"{ctx.author.mention} Tu rareza actual es: **{rol.name}**")
-
-@bot.command(name='ayuda_carta')
-async def ayuda_carta(ctx):
-    """Muestra ayuda sobre cómo crear una carta"""
-    
-    embed = discord.Embed(
-        title="📋 Cómo Crear tu Carta",
-        description="Sigue estos pasos:",
-        color=discord.Color.purple()
-    )
-    
-    embed.add_field(
-        name="1️⃣ Tirar Rareza",
-        value="`!tirar` - Obtén tu rareza (1-5 estrellas)",
-        inline=False
-    )
-    
-    embed.add_field(
-        name="2️⃣ Elegir Atributo",
-        value="`!elegir_atributo` - Elige entre Dark, Flame, Void, Aqua, Light, Forest",
-        inline=False
-    )
-    
-    embed.add_field(
-        name="3️⃣ Elegir Discos",
-        value="`!elegir_discos` - Elige 5 discos (Accel, Blast, Charge)",
-        inline=False
-    )
-    
-    embed.add_field(
-        name="🔄 Otros Comandos",
-        value="`!rareza` - Ver tu rareza actual\n`!reset` - Borrar tu rareza",
-        inline=False
-    )
-    
-    await ctx.send(embed=embed)
 
 # Ejecutar el bot
 bot.run(os.getenv('DISCORD_TOKEN'))
